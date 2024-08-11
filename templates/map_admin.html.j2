@@ -5,10 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="{{ url_for('static', filename='tailwind.css') }}" rel="stylesheet">
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet">
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
-  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
-  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.2/mapbox-gl-geocoder.min.js"></script>
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.2/mapbox-gl-geocoder.css" type="text/css">
   <style>
     #geocoder-container>div {
       min-width: 50%;
@@ -155,7 +155,7 @@
                   const map = new mapboxgl.Map({
                     container: 'map',
                     // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
-                    style: 'mapbox://styles/mapbox/navigation-guidance-day-v4',
+                    style: 'mapbox://styles/mapbox/navigation-day-v1',
                     center: [{{ car_location[0] }}, {{ car_location[1] }}],
                     zoom: 13
                     });
@@ -233,6 +233,49 @@
       </div>
     </div>
   </div>
+
+  {% if multicar == 'True' %}
+  <div class="hidden sm:block" aria-hidden="true">
+    <div class="py-5">
+      <div class="border-t border-gray-200"></div>
+    </div>
+  </div>
+
+  <div class="container mx-auto">
+    <div class="mt-10 sm:mt-0">
+      <div class="md:grid md:grid-cols-3 md:gap-6">
+        <div class="md:col-span-1">
+          <div class="px-4 sm:px-0">
+            <h3 class="text-lg font-medium leading-6 text-gray-900">Change Car</h3>
+            <p class="mt-1 text-sm text-gray-600">Use another Car from your backend</p>
+          </div>
+        </div>
+        <div class="mt-5 md:col-span-2 md:mt-0">
+          <form action="#" method="GET">
+            <div class="overflow-hidden shadow sm:rounded-md">
+              <div class="bg-white px-4 py-5 sm:p-6">
+
+                <div class="grid grid-cols-6 gap-6">
+                  <div class="col-span-6 sm:col-span-3">
+                    <label for="lat" class="block text-sm font-medium text-gray-700">Car ID</label>
+                    <input type="text" name="carid" id="carid" value="{{ carid }}"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 sm:text-sm">
+                  </div>
+
+
+                </div>
+              </div>
+              <div class="bg-gray-50 px-4 py-3 text-right sm:px-6">
+                <button type="submit"
+                  class="inline-flex justify-center rounded-md border border-transparent bg-gray-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Change Car</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 </body>
 
 </html>

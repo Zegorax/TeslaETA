@@ -5,8 +5,8 @@
     <title>Tesla - ShareMyETA</title>
     <meta name="robots" content="noindex, nofollow"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <script src='https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css' rel='stylesheet' />
 
     <link href="{{ url_for('static', filename='tailwind.css') }}" rel="stylesheet">
 
@@ -34,7 +34,7 @@
     mapboxgl.accessToken = '{{ mbtoken }}';
     const map = new mapboxgl.Map({
         container: 'map', // container id
-        style: 'mapbox://styles/mapbox/navigation-guidance-day-v4', // stylesheet location
+        style: 'mapbox://styles/mapbox/navigation-day-v1', // stylesheet location
         zoom: 12,
         center: start
     });
@@ -80,8 +80,8 @@
                     'line-cap': 'round'
                 },
                 'paint': {
-                    'line-color': '#3887be',
-                    'line-width': 5,
+                    'line-color': '#3887F3',
+                    'line-width': 7.5,
                     'line-opacity': 0.75
                 }
             });
@@ -213,7 +213,7 @@
                     '{{ BASE_URL }}/carstate/{{ shortuuid }}',
                     {method: 'GET'}
                 );
-                const {latitude, longitude, odometer, driving, charging, battery_level} = await response.json();
+                const {latitude, longitude, odometer, is_driving, is_charging, battery_level} = await response.json();
                 // Fly the map to the location.
                 map.flyTo({
                     center: [longitude, latitude],
@@ -237,7 +237,7 @@
                 }
 
                 // IF driving === false then add 5 seconds (the refresh rate of this async request)
-                if (driving === false) {
+                if (is_driving === false) {
                     eta.setSeconds(eta.getSeconds() + 5);
                 }
         
@@ -253,7 +253,7 @@
 
                 // Update the Charge Value
                 const instructions_charge = document.getElementById('instructions_charge')
-                if (charging === false) {
+                if (is_charging === false) {
                     if (battery_level >= 80) {
                         instructions_charge.innerHTML = `<i class="fa-solid fa-battery-full"></i> ${Math.round(battery_level)}%`
                     } else if (battery_level >= 60) {
