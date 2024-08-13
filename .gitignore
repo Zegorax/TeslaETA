@@ -4,3 +4,4 @@ service.db
 .DS_Store
 dev/
 *.pyc
+docker-compose.yml
