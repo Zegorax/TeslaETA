@@ -163,7 +163,7 @@ def carstate(shortuuid):
                     new_car_id = result.carid
                 else:
                     new_car_id = BACKEND_PROVIDER_CAR_ID
-            BackendProviderFactory.provider.car_id = new_car_id
+                BackendProviderFactory.provider.car_id = new_car_id
 
             provider = BackendProviderFactory.get_instance()
             provider.refresh_data()
