@@ -1,21 +1,16 @@
 from flask import Flask, render_template, request, redirect, url_for
-import requests
-import os
+import requests, os, time, shortuuid, flask_login
 from dotenv import load_dotenv
-import sqlite3
-import time
-import shortuuid
 from datetime import datetime
-import flask_login
 from geopy.distance import geodesic
-from flask_migrate import Migrate
-from models.database import db
-import flask_sqlalchemy
+from helpers import init
 
 from interfaces.backendfactory import BackendProviderFactory
 
+from config import app
 # Import models for automated database migration
 from models.share import Share
+from models.user import User
 
 load_dotenv()
 MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
@@ -31,17 +26,8 @@ BACKEND_PROVIDER_MULTICAR = os.getenv('BACKEND_PROVIDER_MULTICAR', False)
 # Backend provider instanciation
 BackendProviderFactory(BACKEND_PROVIDER, BACKEND_PROVIDER_BASE_URL, BACKEND_PROVIDER_CAR_ID)
 
-app = Flask(__name__)
+
 app.secret_key = os.getenv('SECRET_KEY')
-
-
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{DATA_DIR}/service.db"
-# Use the global db object
-db.init_app(app)
-migrate = Migrate(app,db)
-
-with app.app_context():
-    db.create_all()
 
 # Fix static folder BASE_URL
 app.view_functions["static"] = None
@@ -62,22 +48,6 @@ app.url_map._rules_by_endpoint['static'] = []
 app.add_url_rule(f'{a_new_static_path}/<path:filename>',
                  endpoint='static',
                  view_func=app.send_static_file)
-
-
-# Login Code
-login_manager = flask_login.LoginManager()
-login_manager.init_app(app)
-
-# User Mapping here
-users = {'admin': {'password': os.getenv('ADMIN_PASSWORD', 'password')}}
-
-# Initiate singleton
-BackendProviderFactory(BACKEND_PROVIDER, BACKEND_PROVIDER_BASE_URL, BACKEND_PROVIDER_CAR_ID)
-
-
-class User(flask_login.UserMixin):
-    pass
-
 
 @login_manager.user_loader
 def user_loader(email):
@@ -138,18 +108,20 @@ def homepage():
 def map(shortuuid):
     result = db.session.query(Share).where(Share.shortuuid == shortuuid).first()
 
-    if result:
-        if result.expiry > time.time():
-            teslalogger = carstate(shortuuid)
-            return render_template('map.html.j2',
-                                   mbtoken=MAPBOX_TOKEN,
-                                   eta_data=teslalogger,
-                                   shortuuid=shortuuid,
-                                   BASE_URL=BASE_URL)
-        else:
-            return('Link Expired')
-    else:
-        return('Link Invalid')
+    if not result:
+        return("Invalid link.")
+    
+    if result.expiry < time.time():
+        return("Link expired.")
+
+    teslalogger = carstate(shortuuid)
+    
+    return render_template('map.html.j2',
+                            mbtoken=MAPBOX_TOKEN,
+                            eta_data=teslalogger,
+                            shortuuid=shortuuid,
+                            BASE_URL=BASE_URL)
+
 
 @app.route(BASE_URL + '/carstate/<shortuuid>')
 def carstate(shortuuid):
@@ -241,4 +213,5 @@ def _jinja2_filter_datetime(date, fmt=None):
     return timestamp
 
 if __name__ == '__main__':
+    init.provision_admin_user()
     app.run(host='0.0.0.0', port=PORT)
