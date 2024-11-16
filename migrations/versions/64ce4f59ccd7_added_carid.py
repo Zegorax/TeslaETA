@@ -1,8 +1,8 @@
-"""Multi Car Support
+"""Added carid
 
-Revision ID: aae5eeb8d2bc
-Revises: 
-Create Date: 2024-08-05 22:51:19.163085
+Revision ID: 64ce4f59ccd7
+Revises: b04e063b1a39
+Create Date: 2024-11-16 16:37:55.863198
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'aae5eeb8d2bc'
-down_revision = None
+revision = '64ce4f59ccd7'
+down_revision = 'b04e063b1a39'
 branch_labels = None
 depends_on = None
 
