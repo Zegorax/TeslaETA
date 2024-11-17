@@ -1,13 +1,13 @@
 # Shareable database configuration for flask-migrate
 
-from flask import Flask
+from apiflask import APIFlask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 import os
 
 DATA_DIR = os.path.abspath(os.getenv('DATA_DIR', '/data/'))
 
-app = Flask(__name__)
+app = APIFlask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{DATA_DIR}/service.db"
 
 db = SQLAlchemy(app)

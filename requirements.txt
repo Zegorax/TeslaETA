@@ -25,3 +25,5 @@ sqlalchemy==2.0.31
 marshmallow==3.23.1
 flask-jwt-extended==4.6.0
 bcrypt==4.2.0
+apiflask==2.0.1
+marshmallow-dataclass==8.7.1
