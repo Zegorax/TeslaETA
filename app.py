@@ -63,7 +63,7 @@ app.add_url_rule(f'{a_new_static_path}/<path:filename>',
                  view_func=app.send_static_file)
 
 
-@app.post("/auth/token")
+@app.post("/api/auth/token")
 @app.input(UserDTO.Schema, arg_name='request_user')
 def get_token(request_user):
     user = db.session.query(User).where(User.username == request_user.username).first()
@@ -79,7 +79,7 @@ def get_token(request_user):
     access_token = create_access_token(identity=user.username)
     return {"token": access_token}
 
-@app.get("/state/<shortuuid>")
+@app.get("/api/state/<shortuuid>")
 @jwt_required()
 def get_car_state(shortuuid):
     share = share_helper.is_share_valid(shortuuid)
@@ -110,7 +110,14 @@ def get_car_state(shortuuid):
     
     return temp_carstate
 
-@app.post("/share")
+@app.get("/api/share")
+@jwt_required()
+def get_shares():
+    shares = db.session.query(Share).where(Share.expiry > time.time()).all()
+    
+    return shares
+
+@app.post("/api/share")
 @app.input(ShareDTO.Schema, arg_name="share_dto")
 @app.output(ShareDTO.Schema, status_code=200)
 @jwt_required()
@@ -124,7 +131,7 @@ def add_share(share_dto: ShareDTO):
     share_dto.uuid = uuid
     return share_dto
 
-@app.get("/test")
+@app.get("/api/test")
 @jwt_required()
 def test():
     return "OK"
