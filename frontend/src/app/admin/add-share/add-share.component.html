@@ -1,6 +1,7 @@
-<div class="main-content">
-    <h1>Create a link</h1>
+<!-- <div class="main-content"> -->
+<h1 mat-dialog-title>Create a link</h1>
 
+<mat-dialog-content>
     <h2>Expiration</h2>
     <!-- <form #addShareForm="ngForm" (ngSubmit)="onSubmit()"> -->
     <mat-form-field>
@@ -21,13 +22,20 @@
     <!-- </form> -->
 
     <h2>Shortcuts</h2>
-    <button (click)="setPicker(24)" mat-raised-button color="primary">
+    <button (click)="setPicker(24)" mat-button color="primary">
         24 hours
     </button>
-    <button (click)="setPicker(48)" mat-raised-button color="primary">
+    <button (click)="setPicker(48)" mat-button color="primary">
         2 days
     </button>
-    <button (click)="setPicker(168)" mat-raised-button color="primary">
+    <button (click)="setPicker(168)" mat-button color="primary">
         1 week
     </button>
-</div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-raised-button (click)="this.dialogRef.close()">Cancel</button>
+    <button mat-raised-button (click)="create()" color="primary">Create</button>
+</mat-dialog-actions>
+
+<!-- </div> -->

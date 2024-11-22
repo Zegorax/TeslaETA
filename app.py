@@ -74,7 +74,7 @@ def get_token(request_user):
     is_password_correct = bcrypt.checkpw(request_user.password.encode('utf-8'), user.password)
     
     if not is_password_correct:
-        return HTTPError(403, "Invalid authentication.")
+        raise HTTPError(403, "Invalid authentication.")
     
     access_token = create_access_token(identity=user.username)
     return {"token": access_token}
@@ -125,7 +125,7 @@ def add_share(share_dto: ShareDTO):
     uuid = shortuuid.uuid()
     
     if share_dto.expiry < time.time():
-        return HTTPError(400, "The expiry date cannot be less than the current time.")
+        raise HTTPError(400, "The expiry date cannot be less than the current time.")
     
     share = Share(shortuuid=uuid, lat=share_dto.lat, lng=share_dto.lng, expiry=share_dto.expiry, carid=share_dto.carid)
     db.session.add(share)

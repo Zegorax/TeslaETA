@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
@@ -10,12 +10,15 @@ import { MatDatepicker, MatDatepickerInputEvent, MatDatepickerModule } from '@an
 import { Router } from '@angular/router';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_NATIVE_DATE_FORMATS, NativeDateAdapter } from '@angular/material/core';
 import { MatTimepickerModule } from '@angular/material/timepicker';
+import { MatDialogActions, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { ShareDTO } from '../../../dtos/share-dto';
+import { ApiService } from '../../services/api/api.service';
 
 @Component({
   selector: 'app-add-share',
   providers: [
     { provide: DateAdapter, useClass: NativeDateAdapter },
-    { provide: MAT_DATE_FORMATS, useValue: MAT_NATIVE_DATE_FORMATS }
+    { provide: MAT_DATE_FORMATS, useValue: MAT_NATIVE_DATE_FORMATS },
   ],
   imports: [
     MatFormFieldModule,
@@ -28,15 +31,30 @@ import { MatTimepickerModule } from '@angular/material/timepicker';
     MatDatepickerModule,
     MatDatepicker,
     MatTimepickerModule,
+    MatDialogActions,
+    MatDialogModule
   ],
   templateUrl: './add-share.component.html',
   styleUrl: './add-share.component.scss'
 })
 export class AddShareComponent {
+  readonly dialogRef = inject(MatDialogRef<AddShareComponent>);
+  readonly _apiService = inject(ApiService)
 
   public expiry = new Date();
 
-  onSubmit(): void {
+  create(): void {
+    var share: ShareDTO = {
+      expiry: this.expiry.getTime() / 1000,
+      carid: 1
+    }
+
+    this._apiService.addShare(share).subscribe(res => {
+      this.dialogRef.close()
+    },
+      err => {
+
+      });
 
   }
 
