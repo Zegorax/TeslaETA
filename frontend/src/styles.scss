@@ -30,3 +30,9 @@ body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
+
+a:hover, a:visited, a:link, a:active
+{
+  color: white;
+  text-decoration: none !important;
+}

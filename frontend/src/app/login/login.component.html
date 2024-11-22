@@ -3,22 +3,16 @@
         <mat-card-content>
             <form #loginForm="ngForm" (ngSubmit)="onSubmit()">
                 <img class="logo" src="assets/eta-logo.png" alt="">
-                <mat-error *ngIf="!loginValid">
-                    The username and password were not recognized
-                </mat-error>
+
                 <mat-form-field appearance="outline">
                     <input matInput [(ngModel)]="username" name="username" required>
                     <mat-label>Username</mat-label>
-                    <mat-error>
-                        Please provide a valid email address
-                    </mat-error>
+
                 </mat-form-field>
                 <mat-form-field appearance="outline">
                     <input matInput type="password" [(ngModel)]="password" name="password" required>
                     <mat-label>Password</mat-label>
-                    <mat-error>
-                        Please provide a valid password
-                    </mat-error>
+
                 </mat-form-field>
                 <button mat-raised-button color="primary" [disabled]="!loginForm.form.valid">Login</button>
             </form>

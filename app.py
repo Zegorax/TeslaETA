@@ -124,12 +124,25 @@ def get_shares():
 def add_share(share_dto: ShareDTO):
     uuid = shortuuid.uuid()
     
+    if share_dto.expiry < time.time():
+        return HTTPError(400, "The expiry date cannot be less than the current time.")
+    
     share = Share(shortuuid=uuid, lat=share_dto.lat, lng=share_dto.lng, expiry=share_dto.expiry, carid=share_dto.carid)
     db.session.add(share)
     db.session.commit()
     
     share_dto.uuid = uuid
     return share_dto
+
+@app.delete("/api/share/<shortuuid>")
+@jwt_required()
+def delete_share(shortuuid: str):
+    share = share_helper.is_share_valid(shortuuid)
+    
+    db.session.delete(share)
+    db.session.commit()
+    
+    return {"status": "success"}
 
 @app.get("/api/test")
 @jwt_required()

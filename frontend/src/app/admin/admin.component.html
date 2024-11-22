@@ -1,1 +1,65 @@
-<p>admin works!</p>
+<mat-toolbar>
+    <mat-toolbar-row>
+        <img src="assets/eta-logo.png" style="height: 50%;" alt="">
+        <span class="example-spacer"></span>
+        <button (click)="logout()" mat-icon-button aria-label="Logout">
+            <mat-icon>logout</mat-icon>
+        </button>
+    </mat-toolbar-row>
+</mat-toolbar>
+
+<mat-drawer-container class="example-container">
+    <mat-drawer style="width: 30%" mode="side" opened>
+        <div class="left-drawer-content">
+            <h2>Active links</h2>
+            <p>Your currently active links</p>
+        </div>
+    </mat-drawer>
+    <mat-drawer-content>
+        <table mat-table [dataSource]="sharesTable" class="mat-eleveation-z8">
+            <ng-container matColumnDef="expiry">
+                <th mat-header-cell *matHeaderCellDef> Expiry </th>
+                <td mat-cell *matCellDef="let element"> {{element.expiry * 1000 | date:'medium'}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="shortuuid">
+                <th mat-header-cell *matHeaderCellDef> Actions </th>
+                <td mat-cell *matCellDef="let element">
+                    <button [routerLink]="'/' + element.shortuuid" mat-raised-button>
+                        <mat-icon>open_in_new</mat-icon>
+                        View
+                    </button>
+
+                    <button (click)="delete(element)" mat-raised-button aria-label="Delete" color="primary">
+                        <mat-icon>delete</mat-icon>
+                        Delete
+                    </button>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+    </mat-drawer-content>
+</mat-drawer-container>
+
+<button (click)="openAddDialog()" mat-fab aria-label="Add a share" class="fixed-fab">
+    <mat-icon>add</mat-icon>
+</button>
+
+<!-- <mat-grid-list cols="4">
+    <mat-grid-tile [colspan]="1">
+
+    </mat-grid-tile>
+    <mat-grid-tile [colspan]="3"> -->
+<!-- <mat-list role="list">
+            <mat-list-item *ngFor="let share of shares | async; index as i" role="listitem">
+                {{ share.uuid }} hello
+                <mat-divider></mat-divider>
+            </mat-list-item>
+        </mat-list> -->
+
+
+
+<!-- </mat-grid-tile>
+</mat-grid-list> -->

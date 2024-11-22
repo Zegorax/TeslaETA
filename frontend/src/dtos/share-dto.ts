@@ -1,6 +1,6 @@
 
 export class ShareDTO {
-    uuid?: string;
+    shortuuid?: string;
     lat?: number;
     lng?: number;
     expiry!: number;

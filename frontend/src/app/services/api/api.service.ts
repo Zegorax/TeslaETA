@@ -17,11 +17,15 @@ export class ApiService {
     return this.http.get<Array<ShareDTO>>(`${environment.apiUrl}/share`);
   }
 
-  getShare(uuid: string): Observable<ShareDTO> {
-    return this.http.get<ShareDTO>(`${environment.apiUrl}/share/${uuid}`);
+  getShare(shortuuid: string): Observable<ShareDTO> {
+    return this.http.get<ShareDTO>(`${environment.apiUrl}/share/${shortuuid}`);
   }
 
   addShare(share: ShareDTO): Observable<ShareDTO> {
     return this.http.post<ShareDTO>(`${environment.apiUrl}/share`, share);
+  }
+
+  deleteShare(share: ShareDTO): Observable<string> {
+    return this.http.delete<string>(`${environment.apiUrl}/share/${share.shortuuid}`)
   }
 }
