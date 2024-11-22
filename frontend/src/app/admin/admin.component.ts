@@ -17,35 +17,34 @@ import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dial
 import { AddShareComponent } from './add-share/add-share.component';
 
 @Component({
-  selector: 'app-admin',
-  standalone: true,
-  imports: [
-    MatToolbar,
-    MatToolbarRow,
-    MatIcon,
-    MatButton,
-    MatIconButton,
-    MatGridList,
-    MatGridTile,
-    MatGridTileText,
-    MatList,
-    MatListItem,
-    MatListItemIcon,
-    CommonModule,
-    MatDivider,
-    MatTableModule,
-    MatSidenav,
-    MatSidenavContainer,
-    MatSidenavContent,
-    MatDrawerContainer,
-    MatDrawer,
-    MatDrawerContent,
-    RouterModule,
-    MatFabButton,
-    MatDialogModule
-  ],
-  templateUrl: './admin.component.html',
-  styleUrl: './admin.component.scss'
+    selector: 'app-admin',
+    imports: [
+        MatToolbar,
+        MatToolbarRow,
+        MatIcon,
+        MatButton,
+        MatIconButton,
+        MatGridList,
+        MatGridTile,
+        MatGridTileText,
+        MatList,
+        MatListItem,
+        MatListItemIcon,
+        CommonModule,
+        MatDivider,
+        MatTableModule,
+        MatSidenav,
+        MatSidenavContainer,
+        MatSidenavContent,
+        MatDrawerContainer,
+        MatDrawer,
+        MatDrawerContent,
+        RouterModule,
+        MatFabButton,
+        MatDialogModule
+    ],
+    templateUrl: './admin.component.html',
+    styleUrl: './admin.component.scss'
 })
 export class AdminComponent {
   public sharesTable = new MatTableDataSource()

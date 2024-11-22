@@ -12,26 +12,25 @@ import { DateAdapter, MAT_DATE_FORMATS, MAT_NATIVE_DATE_FORMATS, NativeDateAdapt
 // import { MatTimepickerModule } from '@angular/material/';
 
 @Component({
-  selector: 'app-add-share',
-  providers: [
-    { provide: DateAdapter, useClass: NativeDateAdapter },
-    { provide: MAT_DATE_FORMATS, useValue: MAT_NATIVE_DATE_FORMATS }
-  ],
-  standalone: true,
-  imports: [
-    MatFormFieldModule,
-    FormsModule,
-    MatCardModule,
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatInputModule,
-    MatDatepickerModule,
-    MatDatepicker,
-    // MatTimepickerModule,
-  ],
-  templateUrl: './add-share.component.html',
-  styleUrl: './add-share.component.scss'
+    selector: 'app-add-share',
+    providers: [
+        { provide: DateAdapter, useClass: NativeDateAdapter },
+        { provide: MAT_DATE_FORMATS, useValue: MAT_NATIVE_DATE_FORMATS }
+    ],
+    imports: [
+        MatFormFieldModule,
+        FormsModule,
+        MatCardModule,
+        CommonModule,
+        MatButtonModule,
+        MatIconModule,
+        MatInputModule,
+        MatDatepickerModule,
+        MatDatepicker,
+        // MatTimepickerModule,
+    ],
+    templateUrl: './add-share.component.html',
+    styleUrl: './add-share.component.scss'
 })
 export class AddShareComponent {
 
