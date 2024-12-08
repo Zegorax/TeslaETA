@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ShareDTO } from '../../../dtos/share-dto';
 import { environment } from '../../../environments/environment';
+import { StateDTO } from '../../../dtos/state-dto';
 
 @Injectable({
   providedIn: 'root'
@@ -27,5 +28,9 @@ export class ApiService {
 
   deleteShare(share: ShareDTO): Observable<string> {
     return this.http.delete<string>(`${environment.apiUrl}/share/${share.shortuuid}`)
+  }
+
+  getState(shortuuid: string): Observable<StateDTO> {
+    return this.http.get<StateDTO>(`${environment.apiUrl}/state/${shortuuid}`)
   }
 }

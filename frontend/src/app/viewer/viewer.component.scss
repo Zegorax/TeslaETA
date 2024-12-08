@@ -1,0 +1,12 @@
+.container {
+    height: 100%;
+    width: 100%;
+}
+
+#main-overlay {
+    position: absolute !important;
+    left: 0;
+    bottom: 35px;
+
+    z-index: 1001 !important;
+}

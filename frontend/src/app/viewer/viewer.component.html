@@ -1,1 +1,23 @@
-<p>viewer works!</p>
+<div class="container">
+
+    <mgl-map *ngIf="this.initialState != undefined" class="container" [style]="'mapbox://styles/mapbox/streets-v12'"
+        [zoom]="[15]" [center]="[this.initialState!.longitude, this.initialState!.latitude]"
+        (mapCreate)="mapCreate($event)">
+
+        <mgl-layer *ngIf="mainRoute" id="mainroute" type="line" [source]="mainRoute" [paint]="{
+              'line-color': '#627BC1',
+              'line-width': 5
+            }"></mgl-layer>
+
+        <mgl-marker *ngIf="this.currentState?.latitude != undefined || this.currentState?.longitude != undefined"
+            [lngLat]="[this.currentState!.longitude!, this.currentState!.latitude!]"></mgl-marker>
+    </mgl-map>
+
+    <div id="main-overlay">
+        <mat-card appearance="outlined">
+            <mat-card-content>Simple card</mat-card-content>
+            <button mat-raised-button color="primary" (click)="test()">Test</button>
+        </mat-card>
+
+    </div>
+</div>

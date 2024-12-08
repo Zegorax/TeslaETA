@@ -19,7 +19,7 @@ export class HttpErrorInterceptorService implements HttpInterceptor {
       catchError((err: HttpErrorResponse) => {
         if (err) {
           switch (err.status) {
-            case 403:
+            case 401:
               this._authService.logout()
               break;
             default:

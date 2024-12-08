@@ -5,6 +5,7 @@ from geopy.distance import geodesic
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 from apiflask import HTTPError
 
+from dtos.state_dto import StateDTO
 from dtos.user_dto import UserDTO
 from dtos.share_dto import ShareDTO
 
@@ -79,36 +80,36 @@ def get_token(request_user):
     access_token = create_access_token(identity=user.username)
     return {"token": access_token}
 
+temp_latitude = 0
+temp_longitude = 0
+
 @app.get("/api/state/<shortuuid>")
-@jwt_required()
+@app.output(StateDTO.Schema)
 def get_car_state(shortuuid):
-    share = share_helper.is_share_valid(shortuuid)
+    share_helper.is_share_valid(shortuuid)
     
     provider = BackendProviderFactory.get_instance()
-    provider.refresh_data()
-    
-    temp_carstate = vars(provider)
-    
-    # Check if ETA destination is similar and use Tesla provided destination if it's within 250m
-    # destination_db = (lat, lng)
-    if provider.active_route_destination:
-        if not share.lat or not share.lng:
-            # If the lat/lon for the destination was not set on the shared link stored in DB, use the destination set in Tesla
-            temp_carstate['eta_destination_lat'] = provider.active_route_latitude
-            temp_carstate['eta_destination_lng'] = provider.active_route_longitude
-            temp_carstate['eta_destination_tesla_seconds'] = provider.active_route_seconds_to_arrival
-            temp_carstate['eta_destination_tesla_battery_level'] = provider.active_route_energy_at_arrival
-        else:
-            temp_carstate['eta_destination_lat'] = share.lat
-            temp_carstate['eta_destination_lng'] = share.lng
-            temp_carstate['eta_waypoint_lat'] = provider.active_route_latitude
-            temp_carstate['eta_waypoint_lng'] = provider.active_route_longitude
-    else:
-        temp_carstate['eta_destination_lat'] = share.lat
-        temp_carstate['eta_destination_lng'] = share.lng
     
     
-    return temp_carstate
+    global temp_latitude
+    global temp_longitude
+    
+    if temp_latitude == 0:
+        provider.refresh_data()
+        temp_latitude = provider.state.latitude 
+        temp_longitude = provider.state.longitude
+    
+    temp_latitude += 0.001
+    temp_longitude += 0.001
+
+    # Temporary fake data
+    provider.state.active_route_destination = "Hello"
+    provider.state.active_route_longitude = 6.617034
+    provider.state.active_route_latitude = 46.555974
+    provider.state.latitude = temp_latitude
+    provider.state.longitude = temp_longitude
+    
+    return provider.state
 
 @app.get("/api/share")
 @jwt_required()
