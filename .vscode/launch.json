@@ -10,7 +10,9 @@
             "request": "launch",
             "program": "app.py",  // Specify the full path to your file
             "cwd": "${workspaceFolder}",
-            "env": {},
+            "env": {
+                "FLASK_DEBUG": "1"
+            },
             "envFile": "${workspaceFolder}/.env",
         }
     ]
