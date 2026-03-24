@@ -1,4 +1,4 @@
-ARG APP_IMAGE=python:3.16-slim
+ARG APP_IMAGE=python:3.12-slim
 
 FROM $APP_IMAGE AS base
 
