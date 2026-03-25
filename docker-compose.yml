@@ -1,4 +1,15 @@
 services:
+  teslaeta:
+    build: .
+    image: teslaeta:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./dev/teslaeta-data:/data
+    env_file:
+      - .env
+    restart: unless-stopped
+
   teslamate:
     image: teslamate/teslamate:latest
     restart: always
@@ -15,20 +26,6 @@ services:
       - ./dev/import:/opt/app/import
     cap_drop:
       - all
-  
-  api:
-    image: tobiasehlert/teslamateapi:edge
-    restart: always
-    ports:
-      - 8080:8080
-    environment:
-      - ENCRYPTION_KEY=secret
-      - DATABASE_USER=teslamate
-      - DATABASE_PASS=password
-      - DATABASE_NAME=teslamate
-      - DATABASE_HOST=database
-      - MQTT_HOST=mosquitto
-      - TZ=Europe/Berlin
 
   database:
     image: postgres:16

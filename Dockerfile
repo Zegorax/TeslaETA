@@ -1,23 +1,38 @@
-ARG APP_IMAGE=python:3.12-slim
+#  Stage 1: Build Angular frontend 
+FROM node:24-alpine AS frontend-builder
+WORKDIR /app
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
 
-FROM $APP_IMAGE AS base
+#  Stage 2: Install Python dependencies 
+FROM python:3.12-slim AS py-builder
+RUN mkdir /app
+WORKDIR /app
+COPY --exclude=frontend/ . /app/
+RUN pip install -r requirements.txt
 
-FROM base as builder
+# Install nginx + envsubst (gettext-base)
+RUN apt-get update && apt-get install -y --no-install-recommends nginx gettext-base && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /install
-WORKDIR /install
+ENV PORT=5051
+WORKDIR /app
 
-COPY requirements.txt /requirements.txt
+# Ensure the data directory exists before declaring it as a VOLUME
+RUN mkdir -p /data
+VOLUME ["/data"]
 
-RUN pip install --prefix=/install -r /requirements.txt
+# Copy built Angular SPA
+COPY --from=frontend-builder /app/dist/frontend/browser /app/static_angular
 
-FROM base
-ENV PORT 5051
-WORKDIR /service
-VOLUME [ "/data" ]
-COPY --from=builder /install /usr/local
-ADD . /service
+# Install nginx site config
+COPY nginx.conf /etc/nginx/sites-enabled/default
+RUN rm -f /etc/nginx/sites-enabled/default.old 2>/dev/null; \
+    nginx -t
 
-EXPOSE 5051/tcp
+# Expose nginx port
+EXPOSE 80
 
 ENTRYPOINT ["sh", "docker_init.sh"]
