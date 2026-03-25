@@ -1,47 +1,52 @@
-from flask import Flask, render_template, request, redirect, url_for
-import requests
-import os
-from dotenv import load_dotenv
-import sqlite3
-import time
-import shortuuid
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+import requests, os, time, shortuuid, flask_login, dotenv, bcrypt
+import json
+import dataclasses
+from flask_sock import Sock
+from simple_websocket import ConnectionClosed
 from datetime import datetime
-import flask_login
 from geopy.distance import geodesic
-from flask_migrate import Migrate
-from models.database import db
-import flask_sqlalchemy
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from apiflask import HTTPError
+
+from dtos.state_dto import StateDTO
+from dtos.user_dto import UserDTO
+from dtos.share_dto import ShareDTO
+
+# Important to have before "from helpers import init"
+dotenv.load_dotenv(".env")
 
 from interfaces.backendfactory import BackendProviderFactory
 
+from helpers import init_helper, share_helper
+from config import app, db
+
 # Import models for automated database migration
 from models.share import Share
+from models.user import User
 
-load_dotenv()
+
 MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
 BASE_URL = os.getenv('BASE_URL')
 PORT = os.getenv('PORT', 5051)
 DATA_DIR = os.path.abspath(os.getenv('DATA_DIR', '/data/'))
 
 BACKEND_PROVIDER = os.getenv('BACKEND_PROVIDER', 'teslalogger')
-BACKEND_PROVIDER_BASE_URL = os.getenv('BACKEND_PROVIDER_BASE_URL')
+BACKEND_PROVIDER_HOSTNAME = os.getenv('BACKEND_PROVIDER_HOSTNAME')
 BACKEND_PROVIDER_CAR_ID = os.getenv('BACKEND_PROVIDER_CAR_ID', 1)
 BACKEND_PROVIDER_MULTICAR = os.getenv('BACKEND_PROVIDER_MULTICAR', False)
 
+JWT_SECRET = os.getenv('JWT_SECRET')
+
 # Backend provider instanciation
-BackendProviderFactory(BACKEND_PROVIDER, BACKEND_PROVIDER_BASE_URL, BACKEND_PROVIDER_CAR_ID)
+BackendProviderFactory(BACKEND_PROVIDER, BACKEND_PROVIDER_HOSTNAME, BACKEND_PROVIDER_CAR_ID)
 
-app = Flask(__name__)
+## Init JWT capabilities
+app.config["JWT_SECRET_KEY"] = JWT_SECRET
+jwt = JWTManager(app)
+sock = Sock(app)
+
 app.secret_key = os.getenv('SECRET_KEY')
-
-
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{DATA_DIR}/service.db"
-# Use the global db object
-db.init_app(app)
-migrate = Migrate(app,db)
-
-with app.app_context():
-    db.create_all()
 
 # Fix static folder BASE_URL
 app.view_functions["static"] = None
@@ -64,181 +69,134 @@ app.add_url_rule(f'{a_new_static_path}/<path:filename>',
                  view_func=app.send_static_file)
 
 
-# Login Code
-login_manager = flask_login.LoginManager()
-login_manager.init_app(app)
-
-# User Mapping here
-users = {'admin': {'password': os.getenv('ADMIN_PASSWORD', 'password')}}
-
-# Initiate singleton
-BackendProviderFactory(BACKEND_PROVIDER, BACKEND_PROVIDER_BASE_URL, BACKEND_PROVIDER_CAR_ID)
-
-
-class User(flask_login.UserMixin):
-    pass
-
-
-@login_manager.user_loader
-def user_loader(email):
-    if email not in users:
-        return
-
-    user = User()
-    user.id = email
-    return user
-
-
-@login_manager.request_loader
-def request_loader(request):
-    email = request.form.get('email')
-    if email not in users:
-        return
-
-    user = User()
-    user.id = email
-    return user
-
-
-@app.route(BASE_URL + '/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'GET':
-        return render_template('login.html.j2')
-    else:
-        email = request.form['email']
-        if email in users and request.form['password'] == users[email]['password']:
-            if 'remember-me' in request.form:
-                remember_me = True
-            else:
-                remember_me = False
-            user = User()
-            user.id = email
-            flask_login.login_user(user, remember=remember_me)
-            return redirect(url_for('map_admin'))
-        else:
-            return render_template('login.html.j2', success=False)
-
-
-@app.route(BASE_URL + '/logout')
-def logout():
-    flask_login.logout_user()
-    return render_template('login.html.j2', logout=True)
-
-
-@login_manager.unauthorized_handler
-def unauthorized_handler():
-    return redirect(url_for('login'))
-
-
-@app.route(BASE_URL + '/')
-def homepage():
-    return render_template('index.html.j2')
-
-@app.route(BASE_URL + '/<shortuuid>')
-def map(shortuuid):
-    result = db.session.query(Share).where(Share.shortuuid == shortuuid).first()
-
-    if result:
-        if result.expiry > time.time():
-            teslalogger = carstate(shortuuid)
-            return render_template('map.html.j2',
-                                   mbtoken=MAPBOX_TOKEN,
-                                   eta_data=teslalogger,
-                                   shortuuid=shortuuid,
-                                   BASE_URL=BASE_URL)
-        else:
-            return('Link Expired')
-    else:
-        return('Link Invalid')
-
-@app.route(BASE_URL + '/carstate/<shortuuid>')
-def carstate(shortuuid):
-    result = db.session.query(Share).where(Share.shortuuid == shortuuid).first()
-
-    if result:
-        if result.expiry > time.time():
-            # Update Attribute for car_id if in DB result else use ENV variable - only if MultiCar is enabled
-            if BACKEND_PROVIDER_MULTICAR == 'True':
-                if result.carid:
-                    new_car_id = result.carid
-                else:
-                    new_car_id = BACKEND_PROVIDER_CAR_ID
-                BackendProviderFactory.provider.car_id = new_car_id
-
-            provider = BackendProviderFactory.get_instance()
-            provider.refresh_data()
-
-            temp_carstate = vars(provider)
-
-            # Check if ETA destination is similar and use Tesla provided destination if it's within 250m
-            # destination_db = (lat, lng)
-            if provider.active_route_destination:
-                if not result.lat or not result.lng:
-                    # If the lat/lon for the destination was not set on the shared link stored in DB, use the destination set in Tesla
-                    temp_carstate['eta_destination_lat'] = provider.active_route_latitude
-                    temp_carstate['eta_destination_lng'] = provider.active_route_longitude
-                    temp_carstate['eta_destination_tesla_seconds'] = provider.active_route_seconds_to_arrival
-                    temp_carstate['eta_destination_tesla_battery_level'] = provider.active_route_energy_at_arrival
-                else:
-                    temp_carstate['eta_destination_lat'] = result.lat
-                    temp_carstate['eta_destination_lng'] = result.lng
-                    temp_carstate['eta_waypoint_lat'] = provider.active_route_latitude
-                    temp_carstate['eta_waypoint_lng'] = provider.active_route_longitude
-
-            else:
-                temp_carstate['eta_destination_lat'] = result.lat
-                temp_carstate['eta_destination_lng'] = result.lng
-            
-            return temp_carstate
-        else:
-            return('Link Expired'), 410
-    else:
-        return('Link Invalid'), 404
-
-
-@app.route(BASE_URL + '/admin', methods = ['POST', 'GET'])
-@flask_login.login_required
-def map_admin():
-    if request.method == 'POST':
-        # GENERATE SHORTUUID:
-        uuid = shortuuid.uuid()
-
-        data = request.form
-        lat = data['lat']
-        lng = data['lng']
-
-        lat_to_insert = float(lat) if lat else None
-        lng_to_insert = float(lng) if lng else None
-        expiry_epoch = datetime.strptime(data['expiry'], '%Y-%m-%dT%H:%M').timestamp()
-
-        new_share = Share(shortuuid=uuid, lat=lat_to_insert , lng=lng_to_insert, expiry=expiry_epoch)
-        db.session.add(new_share)
-        db.session.commit()
-
-    result = db.session.query(Share).where(Share.expiry > time.time()).all()
+@app.post("/api/auth/token")
+@app.input(UserDTO.Schema, arg_name='request_user')
+def get_token(request_user):
+    user = db.session.query(User).where(User.username == request_user.username).first()
     
-    # Update Attribute for car_id if in DB result else use ENV variable
-    if BACKEND_PROVIDER_MULTICAR == 'True':
-        if request.args.get('carid'):
-            new_car_id = request.args.get('carid')
-        else:
-            new_car_id = BACKEND_PROVIDER_CAR_ID
-        BackendProviderFactory.provider.car_id = new_car_id
-    else:
-        new_car_id = BACKEND_PROVIDER_CAR_ID
+    if not user:
+        raise HTTPError(403, "Invalid authentication.")
+    
+    is_password_correct = bcrypt.checkpw(request_user.password.encode('utf-8'), user.password)
+    
+    if not is_password_correct:
+        raise HTTPError(403, "Invalid authentication.")
+    
+    access_token = create_access_token(identity=user.username)
+    return {"token": access_token}
 
+temp_latitude = 0
+temp_longitude = 0
+
+@app.get("/api/state/<shortuuid>")
+@app.output(StateDTO.Schema)
+def get_car_state(shortuuid):
+    share_helper.is_share_valid(shortuuid)
+    
     provider = BackendProviderFactory.get_instance()
     provider.refresh_data()
+    
+    
+    # global temp_latitude
+    # global temp_longitude
+    
+    # if temp_latitude == 0:
+    #     provider.refresh_data()
+    #     temp_latitude = provider.state.latitude 
+    #     temp_longitude = provider.state.longitude
+    
+    # temp_latitude += 0.001
+    # temp_longitude += 0.001
 
-    if 'uuid' in locals():
-        return render_template('map_admin.html.j2', result=result, BASE_URL=BASE_URL, uuid=uuid, mbtoken=MAPBOX_TOKEN, car_location=[provider.longitude, provider.latitude], multicar=BACKEND_PROVIDER_MULTICAR, carid=new_car_id)
+    # # Temporary fake data
+    # provider.state.active_route_destination = "Hello"
+    # provider.state.active_route_longitude = 6.617034
+    # provider.state.active_route_latitude = 46.555974
+    # provider.state.latitude = temp_latitude
+    # provider.state.longitude = temp_longitude
+    
+    return provider.state
+
+@app.get("/api/share")
+@jwt_required()
+def get_shares():
+    shares = db.session.query(Share).where(Share.expiry > time.time()).all()
+    
+    return shares
+
+@app.post("/api/share")
+@app.input(ShareDTO.Schema, arg_name="share_dto")
+@app.output(ShareDTO.Schema, status_code=200)
+@jwt_required()
+def add_share(share_dto: ShareDTO):
+    uuid = shortuuid.uuid()
+    
+    if share_dto.expiry < time.time():
+        raise HTTPError(400, "The expiry date cannot be less than the current time.")
+    
+    share = Share(shortuuid=uuid, lat=share_dto.lat, lng=share_dto.lng, expiry=share_dto.expiry, carid=share_dto.carid)
+    db.session.add(share)
+    db.session.commit()
+    
+    share_dto.uuid = uuid
+    return share_dto
+
+@app.delete("/api/share/<shortuuid>")
+@jwt_required()
+def delete_share(shortuuid: str):
+    share = share_helper.is_share_valid(shortuuid)
+    
+    db.session.delete(share)
+    db.session.commit()
+    
+    return {"status": "success"}
+
+@app.get("/api/test")
+@jwt_required()
+def test():
+    return "OK"
+
+
+@sock.route('/ws/<share_uuid>')
+def ws_car_state(ws, share_uuid):
+    # 1. Validate share
+    share = share_helper.is_share_valid(share_uuid)
+    if not share:
+        return
+
+    # 3. Get provider and determine mode
+    provider = BackendProviderFactory.get_instance()
+
+    from backendproviders.teslamate_mqtt import TeslamateMQTTBackendProvider
+
+    if isinstance(provider, TeslamateMQTTBackendProvider):
+        # MQTT push mode: wait on condition variable for state updates
+        condition = provider._condition
+        # Send current state immediately if available
+        if provider.state.latitude is not None:
+            try:
+                ws.send(json.dumps(dataclasses.asdict(provider.state)))
+            except ConnectionClosed:
+                return
+
+        while True:
+            with condition:
+                condition.wait(timeout=30)
+            try:
+                ws.send(json.dumps(dataclasses.asdict(provider.state)))
+            except ConnectionClosed:
+                break
     else:
-        return render_template('map_admin.html.j2', result=result, BASE_URL=BASE_URL, mbtoken=MAPBOX_TOKEN, car_location=[provider.longitude, provider.latitude], multicar=BACKEND_PROVIDER_MULTICAR, carid=new_car_id)
+        # Fallback poll mode: poll every 1s and push
+        while True:
+            try:
+                provider.refresh_data()
+                ws.send(json.dumps(dataclasses.asdict(provider.state)))
+            except ConnectionClosed:
+                break
+            time.sleep(1)
 
-@app.template_filter('fromtimestamp')
-def _jinja2_filter_datetime(date, fmt=None):
-    timestamp = datetime.fromtimestamp(date)
-    return timestamp
 
 if __name__ == '__main__':
+    init_helper.provision_admin_user()
     app.run(host='0.0.0.0', port=PORT)

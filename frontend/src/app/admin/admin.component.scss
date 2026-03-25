@@ -1,0 +1,22 @@
+.example-spacer {
+  flex: 1 1 auto;
+}
+
+mat-grid-tile {
+  border: 3px fuchsia solid;
+}
+
+.left-drawer-content {
+  padding: 20px;
+}
+
+button {
+  // border-radius: 20% !important;
+  margin: 5px;
+}
+
+.fixed-fab {
+    position: fixed;
+    right: 1em;
+    bottom: 1em;
+}
