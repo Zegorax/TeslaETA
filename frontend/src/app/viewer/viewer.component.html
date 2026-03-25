@@ -38,7 +38,7 @@
                     <span>
                         {{ currentState?.battery_level ?? '--' }}%
                         <ng-container *ngIf="currentState?.active_route_energy_at_arrival != null">
-                            &rarr; {{ currentState?.active_route_energy_at_arrival }}%
+                            <span style='font-size:30px;'>&#8594;</span> {{ currentState?.active_route_energy_at_arrival }}%
                         </ng-container>
                     </span>
                 </div>

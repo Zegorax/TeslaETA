@@ -161,7 +161,7 @@ export class ViewerComponent implements OnInit, OnDestroy {
                 source: 'car-arrow',
                 layout: {
                     'icon-image': 'car-arrow',
-                    'icon-size': 0.2,
+                    'icon-size': 0.3,
                     'icon-rotate': ['get', 'heading'],
                     'icon-rotation-alignment': 'map',
                     'icon-allow-overlap': true,
@@ -194,6 +194,9 @@ export class ViewerComponent implements OnInit, OnDestroy {
 
                 console.log("Re-calculated routing")
             }
+        }
+        else {
+            this.mainRoute = null
         }
 
         if (!this.map) {

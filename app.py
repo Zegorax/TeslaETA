@@ -138,9 +138,7 @@ def test():
 @sock.route('/ws/<share_uuid>')
 def ws_car_state(ws, share_uuid):
     # 1. Validate share
-    share = share_helper.is_share_valid(share_uuid)
-    if not share:
-        return
+    share_helper.is_share_valid(share_uuid)
 
     # 3. Get provider and determine mode
     provider = BackendProviderFactory.get_instance()
@@ -150,6 +148,11 @@ def ws_car_state(ws, share_uuid):
     if isinstance(provider, TeslamateMQTTBackendProvider):
         # MQTT push mode: wait on condition variable for state updates
         condition = provider._condition
+        
+        # Check again that the share is still valid.
+        # If it is deleted but page is kept open, data can still be pushed
+        share_helper.is_share_valid(share_uuid)
+
         # Send current state immediately if available
         if provider.state.latitude is not None:
             try:
@@ -161,6 +164,7 @@ def ws_car_state(ws, share_uuid):
             with condition:
                 condition.wait(timeout=30)
             try:
+                share_helper.is_share_valid(share_uuid)
                 ws.send(json.dumps(dataclasses.asdict(provider.state)))
             except ConnectionClosed:
                 break
@@ -168,6 +172,7 @@ def ws_car_state(ws, share_uuid):
         # Fallback poll mode: poll every 1s and push
         while True:
             try:
+                share_helper.is_share_valid(share_uuid)
                 provider.refresh_data()
                 ws.send(json.dumps(dataclasses.asdict(provider.state)))
             except ConnectionClosed:
