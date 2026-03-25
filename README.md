@@ -47,6 +47,7 @@ Copy `.env_sample` to `.env` and fill in the values. This file must be present a
 | Variable                    | Example                          | Required | Description |
 |-----------------------------|----------------------------------|----------|-------------|
 | `PORT`                      | `5051`                           | N        | Internal Flask port (default: `5051`, should not be changed if using the Docker image) |
+| `API_URL`                   | `http://localhost:8080    `      | Y        | API url pointing to the Python app (without /api/) |
 | `DATA_DIR`                  | `/data/`                         | N        | Path where the SQLite database is stored (default: `/data/`) |
 | `SECRET_KEY`                | `RANDOMLY_GENERATED_STRING`      | Y        | Flask secret key |
 | `JWT_SECRET`                | `ANOTHER_RANDOM_STRING`          | Y        | Secret used to sign JWT tokens |
