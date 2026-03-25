@@ -161,7 +161,7 @@ export class ViewerComponent implements OnInit, OnDestroy {
                 source: 'car-arrow',
                 layout: {
                     'icon-image': 'car-arrow',
-                    'icon-size': 0.4,
+                    'icon-size': 0.2,
                     'icon-rotate': ['get', 'heading'],
                     'icon-rotation-alignment': 'map',
                     'icon-allow-overlap': true,
@@ -225,8 +225,7 @@ export class ViewerComponent implements OnInit, OnDestroy {
             center: [this.currentState!.longitude, this.currentState!.latitude],
             essential: true,
             zoom: 15,
-            speed: 0.8,
-            maxDuration: 2000
+            speed: 0.8
         })
     }
 
