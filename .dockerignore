@@ -1,5 +1,32 @@
 .env_sample
+.env
 .venv
 data
 .github
 TeslaETA-map.png
+dev
+.git
+.gitignore
+README.md
+Dockerfile
+
+
+# Node modules and Angular build artifacts (rebuilt inside Docker)
+frontend/node_modules/
+frontend/dist/
+
+# Python caches
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# IDE
+.vscode/
+.devcontainer/
+
+# Tests & docs
+tests/
+docs/
+plans/

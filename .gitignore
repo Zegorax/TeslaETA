@@ -4,6 +4,4 @@ service.db
 .DS_Store
 dev/
 *.pyc
-docker-compose.yml
 plans/
-frontend/src/environments/environment.development.ts
