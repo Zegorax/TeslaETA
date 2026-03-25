@@ -133,7 +133,7 @@ export class ViewerComponent implements OnInit, OnDestroy {
     }
 
     mapLoad(event: any): void {
-        this.map!.loadImage('/assets/car-arrow.png', (error: any, image: any) => {
+        this.map!.loadImage('/assets/images/car-arrow.png', (error: any, image: any) => {
             if (error) { console.error('Failed to load car-arrow.png', error); return; }
 
             this.map!.addImage('car-arrow', image);

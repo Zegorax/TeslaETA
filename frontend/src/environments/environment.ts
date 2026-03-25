@@ -1,5 +1,5 @@
+const env = (window as any).env || {};
 export const environment = {
-    apiUrl: "",
-    wsUrl: "",
-    mapboxToken: ""
+    apiUrl: env["apiUrl"] || "default",
+    mapboxToken: env["mapboxToken"] || ""
 };
