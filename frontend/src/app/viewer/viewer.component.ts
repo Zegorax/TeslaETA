@@ -13,6 +13,7 @@ import { WsService } from '../services/ws/ws.service';
 import { Router } from '@angular/router';
 import { StateDTO } from '../../dtos/state-dto';
 import { Subscription } from 'rxjs';
+import { CarAnimator } from './car-animator';
 
 
 @Component({
@@ -44,6 +45,7 @@ export class ViewerComponent implements OnInit, OnDestroy {
     private readonly RECENTER_DELAY_MS = 5000
 
     private lastHeading: number = 0
+    private _animator: CarAnimator | null = null
 
     isConnected = false
     readonly gearStates = ['P', 'R', 'N', 'D'] as const
@@ -130,6 +132,7 @@ export class ViewerComponent implements OnInit, OnDestroy {
         this._connectedSub?.unsubscribe();
         this._wsService.disconnect();
         if (this._recenterTimer) clearTimeout(this._recenterTimer);
+        this._animator?.cancel();
     }
 
     mapLoad(event: any): void {
@@ -169,6 +172,8 @@ export class ViewerComponent implements OnInit, OnDestroy {
                 }
             });
 
+            this._animator = new CarAnimator(this.map!.getSource('car-arrow') as mapboxgl.GeoJSONSource);
+
             // If state was already received before the image finished loading, apply it now
             if (this.currentState) {
                 this.updateState(this.currentState);
@@ -205,20 +210,12 @@ export class ViewerComponent implements OnInit, OnDestroy {
 
         this.centerMapIfNotDragging()
 
-        let newSourceData : GeoJSON.Feature<GeoJSON.Geometry> = {
-            type: 'Feature',
-            geometry: {
-                type: 'Point',
-                coordinates: [state.longitude, state.latitude]
-            },
-            properties: { heading: state.heading ?? this.lastHeading }
-        }
+        const toHeading = state.heading ?? this.lastHeading
         if (state.heading != null) {
             this.lastHeading = state.heading
         }
 
-        const sourceToUpdate = this.map!.getSource("car-arrow") as mapboxgl.GeoJSONSource
-        sourceToUpdate?.setData(newSourceData)
+        this._animator?.moveTo([state.longitude, state.latitude], toHeading)
     }
 
     centerMapIfNotDragging(): void {

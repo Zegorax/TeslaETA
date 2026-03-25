@@ -4,7 +4,7 @@
         [zoom]="[15]" [center]="[this.initialState!.longitude, this.initialState!.latitude]"
         (mapCreate)="mapCreate($event)" (mapLoad)="mapLoad($event)">
 
-        <mgl-layer *ngIf="mainRoute" id="mainroute" type="line" [source]="mainRoute" [paint]="{
+        <mgl-layer *ngIf="mainRoute" id="mainroute" type="line" [source]="mainRoute" [before]="'layer-with-car-arrow'" [paint]="{
               'line-color': '#627BC1',
               'line-width': 5
             }"></mgl-layer>
