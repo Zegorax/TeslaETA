@@ -13,7 +13,7 @@ export class WsService implements OnDestroy {
 
   connect(shortuuid: string): Observable<StateDTO> {
     this.disconnect();
-    const base = environment.wsUrl || this._deriveWsBase();
+    const base = this._deriveWsBase();
     this.socket$ = this.createSocket({
       url: `${base}/ws/${shortuuid}`,
       deserializer: (event) => JSON.parse(event.data) as StateDTO,
