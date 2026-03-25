@@ -1,5 +1,7 @@
+// This file should never be used.
 const env = (window as any).env || {};
 export const environment = {
     apiUrl: env["apiUrl"] || "default",
-    mapboxToken: env["mapboxToken"] || ""
+    wsUrl: env["wsUrl"] || "",
+    mapboxToken: env["mapboxToken"] || "",
 };
